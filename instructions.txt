@@ -1,0 +1,197 @@
+
+ * Ohjelma on perinteinen matopeli.
+ * Matoa liikutetaan WASD-näppäimillä.
+ * Pelin tarkoitus on ohjata mato ruuan luokse.
+ * Ruokaa syödessään mato kasvaa pituutta.
+ * Mato liikkuu haluttuun suuntaan sekunnin välein
+ * Seinään tai itseensä osuessaan mato kuolee ja peli loppuu.
+ * Pelin voittaa kun saa täytettyä koko peliruudukon madolla,
+ * eli syö niin paljon ruokaa, että ruudukossa ei ole enää
+ * yhtään tyhjää uudelle ruualle.
+ *
+ * Pelissä syötetään satunnaislukugeneraatorille seed -luku
+ * ja haluttu pelialueen koko leveydessä ja korkeudessa.
+ *
+ * Halutessaan pelaaja voi keskeyttää pelin ( pause ),
+ * ja resetoida sen alkuun ( reset ).
+ * Pelaaja voi myös generoida täysin uuden pelialueen.
+ *
+ *
+ * Ohjelman kirjoittaja
+ * Nimi: Timi Jouppila
+ * Opiskelijanumero: 151333451
+ * Käyttäjätunnus: cstijo
+ * E-Mail: timi.jouppila@tuni.fi
+ *
+ * Huomioita ohjelmasta ja sen toteutuksesta:
+ *
+ * Vaikka UI:ssa näennäinen scoreboard onkin,
+ * siinä ei ole minkäänlaista toiminnallisuutta.
+ * Sen toteutus jäi tekemättä.
+
+
+----------
+
+
+ * KÄYTTÖOHJEET *
+
+
+Ennenkuin voit aloittaa pelin, tulee generoida pelialue:
+Syötä siemenluku "enter map seed" -kenttään.
+Valitse pelialueen haluttu korkeus ja leveys "Map height" ja "Map width" asetuksilla.
+
+
+NEW MAP generoi pelialueen ja mahdollistaa pelin aloittamisen.
+- vanha gameboard poistetaan deletellä
+- read_input - lukee seedin ja mapin koon ja tallentaa ne muuttujiin
+- generate_map - kutsuu GameBoard construktoria
+- generate_ui_map - rakentaa graafisen pelialueen
+		  -> drawBoard - pävittää UI:n sisällön
+
+START aloittaa pelin.
+- käynnistää ajastimen
+
+ ajastin:
+- timerTimeOut - lisää sekunnin seconds_ muuttujalle
+	       -> makeSnakeMove - tarkistaa onko peli loppu gameBoardilta
+	       -> välittää GameBoardille liikkumiskäskyn
+	       -> drawBoard - pävittää UI:n sisällön
+
+PAUSE keskeyttää käynnissä olevan pelin.
+- pysäyttää ajastimen
+
+RESET palautaa pelin alkuun.
+- vanha gemaboard poistetaan deletellä
+- pysäytetään ajastin
+- resetoidaan peli: taustaväri, movecommand, seconds_ jne..
+- (ei lueta UI:n inputteja)
+- generate_map - kutsuu GameBoard construktoria
+- generate_ui_map - rakentaa graafisen pelialueen
+		  -> drawBoard - pävittää UI:n sisällön
+
+EXIT sulkee pelin.
+- poistaa gameboardin deletellä
+- poistaa graafisen pelilaudan (scene_)
+- sulkee pelin. close()
+
+Yllä mainitut näppäimet muuttavat toistensa enablet-statusta (ja labeleita) tilanteen mukaan:
+Et voi painaa (exit poisluettuna) mitään muuta, ennen kuin painat NEW MAP
+Pelin ollessa päällä, et voi generoida uutta tai resetoida ennenkuin painat PAUSE
+
+Voidaksesi resetoida pelin tai generoidaksesi uuden pelialueen,
+tulee ensin keskeyttää peli PAUSE:lla.
+
+Matoa ohjataan WASD-näppäimillä. 
+Muu kontrollointi tapahtuu UI:n näppäimillä ja input-elementeillä.
+WASD -näppäinten painaminen muuttaa movecommand -muuttujan sisältöä vastaamaan
+GameBoardin hyväksymiin käskyjä halutun suunnan mukaisesti:
+Ylös:		"w"
+Vasemmalle:	"a"
+Alas:		"s"
+Oikealle: 	"d"
+
+
+----------
+
+
+ * OHJELMAN TOIMINTA *
+ *Toiminta minimivaatimusten osalta*
+
+*Peli kysyy käyttäjältä satunnaislukugeneraattorin siemenlukua.
+& Pelialueen kokoa (erikseen leveyttä ja korkeutta) voidaan muutella.
+= Siemenluku ja pelialueen koko valitaan pelin Graafisen käyttöliitymän kautta.
+Pelaaja voi myös jättää  valinnat tekemättä, koska kokovalinnoissa on oletusluvut ja
+valmiina annettu GameBoard() pystyy toimimaan siemenluvun osalta ilman annettua lukuakin.
+Pelialueen generointi tapahtuu vasta NEW MAP -napin painalluksesta.
+
+
+*Pelin pelaamiseksi pelialue ja mato näytetään käyttäjälle.
+= Pelialue näytetään keskellä graafista käyttöliittymää. Peliä ei pysty pelaaman ilman sitä,
+koska se täytyy generoida NEW MAP napilla, ennen kuin pelin aloittavaa START -nappia pystyy edes painamaan.
+
+
+*Pelialueelle tulee näkyviin mato (aluksi vain pää) sekä ruoka. Madon ja ruoan pitää olla graafisia käyttöliittymäkomponentteja (esim. suorakulmioita/neliöitä/etikettejä), ei pelkästään tekstiä.
+= Itsestään selvä: mato ja ruoka on esitetty ympyröinä. Aijemmissa versioissa mato koostui neliöistä,
+mutta päädyin eri kokoisiin ympyröihin loppujen lopuksi. Ruoka eroaa madon osista värinsä puolesta
+selkeästi, joten samasta muodosta ei ole haittaa. 
+
+
+*Madon pään, hännän ja keskiruumiin sekä ruoan pitää olla jollakin tavalla erilaisia (esim. erimuotoisia tai erivärisiä). Keskiruumis voi koostua useista samanlaisista osista.
+= Madon pää on iso ja tumma, keskiruumis hieman vaaleampi ja pienempi ja häntä vielä vaaleampi ja pienempi.
+Ruoka on selkeästi eri värinen. 
+
+
+*Mato kasvaa, kun se syö. Tällöin myös ruoka häviää, mutta uusi ruoka ilmestyy johonkin uuteen kohtaan.
+= Madon kasvu tapahtuu täysin GameBoardin päässä ja MainWindow vain tarkistaa madon osien ja ruuan sijainnin jokaisen ajastimen timeoutissa. 
+
+timertimeout->makeSnakeMove->GameBoard-moveSnake-> GameBoard tekee temppunsa.
+			   ->drawBoard : päivittää graafisen pelialueen
+
+
+*Käyttäjän pitää pystyä valitsemaan madon etenemissuunta (esim. näppäinkomennoilla tai painonapeilla).
+= Käyttäjä ohjaa matoa WASD -näppäimillä. Peli pitää aina aloittaa START -napilla,
+joten kursorin jääminen syöttöikkunaan pitäisi olla vältetty. Napin painallus muuttaa
+movecomman -stringin "osoittamaan" haluttuun suuntaan; w, a, s, d.
+
+
+*Mato liikkuu itsestään viimeksi valittuun suuntaan, joten tarvitset pelissä ajastimen.
+= Ajastimen timeoutin välein matoa liikutetaan "sisäisellä" pelialueella välittämällä
+GameBoardille likkumiskäsky stringin muodossa.
+
+
+*Peli ilmoittaa voitosta/häviöstä.
+= Ainakun timeout haluaa liikuttaa matoa, tarkistetaan ensin GameBoardilta, onko peli päättynyt.
+Jos näin on, muutetaan pelialueen taustaväri vastaamaan tilannetta, pysäytetään ajastin
+ja esitetään tilannetta vastaava teksti.
+
+
+*Pelin pystyy aloittamaan uudelleen alusta (reset). Tämän tulee olla mahdollista pelin päätyttyä ja myös kesken pelin.
+= Pelin pystyy resetoimaan kesken pelin tai sen päätyttyä.
+Sen pystyy myös pysäyttämään, PAUSE.
+PElaaja voi myös generoida täysin uuden pelialueen eri asetuksilla.
+Resetointi ja uuden pelialueen generointi edellyttää pelin pysäyttämistä PAUSElla.
+
+
+ *Toiminta lisätoimintojen osalta*
+* Peliruudukon kokoa voi säätää käyttöliittymän kautta. 
+= Peliruudukon koko valitaan ennen pelin alkua syöttämällä ruutuihin halutu arvot.
+Valinnoilla on minimi- ja maksimiarvot: molemmissa 3-10.
+Generoinnin yhteydessä arvot luetaan ja tallennetaan muuttujiin.
+
+
+* Pelissä on ajastin, joka kertoo siihen mennessä käytetyn ajan.
+= Ajastin lisää jokaisen timeoutin yhteydessä sekunnit sisältävälle +1. (timeout = 1000ms).
+Aika esitetään pelissä minuutteina ja sekunteina.
+
+
+* Pelissä on jonkinlainen pistelasku, joka perustuu pelaajan taitavuuteen. Voit itse valita tavan laskea pisteitä. Muista dokumentoida pistelaskutapasi.
+= Lisäsin GameBoardille julkisen toiminnon joka yksinkertaisesti palauttaa madon pituuden.
+Madon pituus -1 = pisteet. -1 siksi, koska alussa halutaan pistetäulun näyttävän 0, ei 1.
+
+
+* Käyttöliittymän taustaväri vaihtuu, kun pelaaja voittaa tai häviää (voitosta taustaväri muuttuu esim. vihreäksi ja häviöstä punaiseksi). Uudelleenaloituksessa (reset) taustaväri palautuu ennalleen.
+= Käyttöliittymän taustaväri muuttuu punaiseksi häviössä ja vihreäksi voitossa. Reset palauttaa taustavärin ennalleen. Toteutustapa lienee hieman tönkkö eikä lopputuloskaan ole kovin kaunis.
+Toiminto kuitenkin toimii.
+
+
+* Pelissä on pause-nappula, jolla ajanoton saa pysäytettyä, kun peli on käynnissä. Tällöin peli lakkaa esim. vastaamasta näppäinkomentoihin. Käyttäjälle ilmoitetaan jotenkin, että pause on meneillään.
+= Pause-nappi pysäyttää ajastimen ja mahdollistaa resetoinnin tai uuden pelialueen generoinnin. 
+
+
+----------
+
+
+** GAMEBOARDILLE ja POINTILLE LISÄTYT TOIMINNOT **
+POINT -luokalle en lisännyt mitään
+
+GAMEBOARD -luokalle lisäsin kaksi toimintoa:
+*findSnakeAndFood
+= ottaa vastaan x ja y -koordinaatit ja tarkistaa onko niissä koordinaateissa oleva POINT
+food, head, tail, body vai tyhjä.
+palauttaa hieman kömpelösti stringin. Se voisi palauttaa myös esim int:n, mutta string
+helpotti koodin kirjoittamista. 
+
+*getSakeLength
+= Palauttaa madon pituuden
+Tarvitsin julkisen funktion, joka palauttaa pituuden,
+koska halusin käyttää sitä pisteenlaskussa.
